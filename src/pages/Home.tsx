@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import type { RootState } from "@/redux/store";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "@/redux/slices/authSlice";
 import axios from "axios";
 import { socket } from "@/socket";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -65,6 +67,8 @@ function Home() {
   const [newMessage, setNewMessage] = useState("");
   const user = useSelector((state: RootState) => state.auth.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // create chat
   const [chatName, setChatName] = useState<string>("");
@@ -169,100 +173,148 @@ function Home() {
       );
     }
   };
-  return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar: Chat List */}
-      <div className="w-1/3 bg-white border-r overflow-y-auto">
-        <h2 className="text-xl font-bold p-4 border-b">Chats</h2>
 
-        <Dialog>
-          <DialogTrigger>
-            <div className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer">
-              +
-            </div>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Chat</DialogTitle>
-              <form onSubmit={handleCreateNewChat}>
-                <Input
-                  placeholder="Chat Name"
-                  value={chatName}
-                  onChange={(e) => setChatName(e.target.value)}
-                />
-                <br></br>
-                <Input
-                  placeholder="Enter Reciever's usernames"
-                  value={recieverUsername}
-                  onChange={(e) => setRecieverUsername(e.target.value)}
-                />
-                <br></br>
-                <Button type="submit">Create New Chat</Button>
-                {error && <p>{error}</p>}
-              </form>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-        <ul>
-          {chats.map((chat) => (
-            <li
-              key={chat.id}
-              className="p-4 cursor-pointer hover:bg-gray-100 border-b"
-              onClick={() => handleOpenChat(chat)}
-            >
-              <p className="font-semibold">{chat.name}</p>
-              <p className="text-sm text-gray-500">
-                Members: {chat.members.map((m) => m.user.username).join(", ")}
-              </p>
-              {chat.messages.length > 0 && (
-                <p className="text-sm text-gray-700 mt-1 truncate">
-                  {chat.messages[0].sender.username}: {chat.messages[0].content}
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar: Chat List */}
+      <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Chats</h2>
+          <Dialog>
+            <DialogTrigger>
+              <Button>New Chat</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white border border-gray-200 rounded-lg shadow-lg">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-semibold text-gray-900">
+                  Create New Chat
+                </DialogTitle>
+                <form onSubmit={handleCreateNewChat} className="space-y-4 mt-4">
+                  <Input
+                    placeholder="Chat Name"
+                    value={chatName}
+                    onChange={(e) => setChatName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  />
+                  <Input
+                    placeholder="Enter Receiver's username"
+                    value={recieverUsername}
+                    onChange={(e) => setRecieverUsername(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-md transition-colors"
+                  >
+                    Create New Chat
+                  </Button>
+                  {error && <p className="text-red-600 text-sm">{error}</p>}
+                </form>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <ul className="divide-y divide-gray-100">
+            {chats.map((chat) => (
+              <li
+                key={chat.id}
+                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => handleOpenChat(chat)}
+              >
+                <p className="font-medium text-gray-900">{chat.name}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Members: {chat.members.map((m) => m.user.username).join(", ")}
                 </p>
-              )}
-            </li>
-          ))}
-        </ul>
+                {chat.messages.length > 0 && (
+                  <p className="text-sm text-gray-600 mt-2 truncate">
+                    {chat.messages[0].sender.username}:{" "}
+                    {chat.messages[0].content}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="p-4 border-t border-gray-200">
+          <Button
+            variant="destructive"
+            onClick={handleLogout}
+            className="w-full cursor-pointer"
+          >
+            Logout
+          </Button>
+        </div>
       </div>
 
       {/* Chat Window */}
-      <div className="flex-1 p-4 flex flex-col justify-between">
+      <div className="flex-1 flex flex-col">
         {selectedChat ? (
           <div className="flex flex-col h-full">
-            <div className="border-b p-2 font-bold text-lg">
-              {selectedChat.name}
+            <div className="border-b border-gray-200 p-4 bg-white">
+              <h3 className="font-semibold text-gray-900 text-lg">
+                {selectedChat.name}
+              </h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
               {messages.map((msg: any) => (
-                <div key={msg.id} className="p-2 rounded bg-gray-200 w-fit">
-                  <span className="font-semibold">{msg.sender.username}:</span>{" "}
-                  {msg.content}
+                <div key={msg.id} className="flex flex-col">
+                  <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 max-w-xs">
+                    <span className="font-medium text-gray-900 text-sm">
+                      {msg.sender.username}
+                    </span>
+                    <p className="text-gray-700 mt-1">{msg.content}</p>
+                  </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
-            <div className="mt-2">
+            <div className="p-4 bg-white border-t border-gray-200">
               <input
                 type="text"
                 placeholder="Type a message..."
-                className="w-full p-2 border rounded"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e) => {
-                  {
-                    if (e.key === "Enter") handleSendMessage();
-                  }
+                  if (e.key === "Enter") handleSendMessage();
                 }}
               />
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
-            Select a chat to start messaging
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
+              <p className="text-lg font-medium">
+                Select a chat to start messaging
+              </p>
+            </div>
           </div>
         )}
       </div>
       {error && (
-        <div className="text-red-500 p-2 border-b bg-red-50">{error}</div>
+        <div className="fixed top-4 right-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg">
+          {error}
+        </div>
       )}
     </div>
   );
