@@ -201,7 +201,7 @@ function Home() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   />
                   <Input
-                    placeholder="Enter Receiver's username"
+                    placeholder="Who do you want to chat with ?"
                     value={recieverUsername}
                     onChange={(e) => setRecieverUsername(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
