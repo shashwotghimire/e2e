@@ -71,6 +71,7 @@ function Home() {
   const navigate = useNavigate();
 
   // create chat
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [chatName, setChatName] = useState<string>("");
   const [recieverUsername, setRecieverUsername] = useState<string>("");
 
@@ -154,7 +155,7 @@ function Home() {
   const handleCreateNewChat = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post(
+      const res = await axios.post(
         `${url}/api/chats/chat`,
         {
           name: chatName,
@@ -162,9 +163,11 @@ function Home() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      setChats((prev) => [...prev, res.data.chat]);
       setChatName("");
       setRecieverUsername("");
       setError(null);
+      setDialogOpen(false);
     } catch (err: any) {
       setError(
         err.response?.data?.error ||
@@ -179,18 +182,20 @@ function Home() {
     navigate("/login");
   };
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background text-foreground">
       {/* Sidebar: Chat List */}
-      <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-1/3 bg-card border-r border-border flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Chats</h2>
-          <Dialog>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Chats</h2>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger>
-              <Button>New Chat</Button>
+              <div className="w-full bg-foreground text-background hover:opacity-90 px-4 py-2 rounded-md transition-colors flex items-center justify-center cursor-pointer">
+                New Chat
+              </div>
             </DialogTrigger>
-            <DialogContent className="bg-white border border-gray-200 rounded-lg shadow-lg">
+            <DialogContent className="bg-card border border-border rounded-lg shadow-lg">
               <DialogHeader>
-                <DialogTitle className="text-lg font-semibold text-gray-900">
+                <DialogTitle className="text-lg font-semibold text-foreground">
                   Create New Chat
                 </DialogTitle>
                 <form onSubmit={handleCreateNewChat} className="space-y-4 mt-4">
@@ -198,18 +203,15 @@ function Home() {
                     placeholder="Chat Name"
                     value={chatName}
                     onChange={(e) => setChatName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-foreground focus:border-transparent bg-background text-foreground"
                   />
                   <Input
                     placeholder="Who do you want to chat with ?"
                     value={recieverUsername}
                     onChange={(e) => setRecieverUsername(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-foreground focus:border-transparent bg-background text-foreground"
                   />
-                  <Button
-                    type="submit"
-                    className="w-full bg-gray-900 text-white hover:bg-gray-800 px-4 py-2 rounded-md transition-colors"
-                  >
+                  <Button type="submit" className="">
                     Create New Chat
                   </Button>
                   {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -223,15 +225,15 @@ function Home() {
             {chats.map((chat) => (
               <li
                 key={chat.id}
-                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => handleOpenChat(chat)}
               >
-                <p className="font-medium text-gray-900">{chat.name}</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="font-medium text-foreground">{chat.name}</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   Members: {chat.members.map((m) => m.user.username).join(", ")}
                 </p>
-                {chat.messages.length > 0 && (
-                  <p className="text-sm text-gray-600 mt-2 truncate">
+                {chat.messages && chat.messages.length > 0 && (
+                  <p className="text-sm text-muted-foreground mt-2 truncate">
                     {chat.messages[0].sender.username}:{" "}
                     {chat.messages[0].content}
                   </p>
@@ -255,19 +257,19 @@ function Home() {
       <div className="flex-1 flex flex-col">
         {selectedChat ? (
           <div className="flex flex-col h-full">
-            <div className="border-b border-gray-200 p-4 bg-white">
+            <div className="border-b border-border p-4 bg-card">
               <h3 className="font-semibold text-gray-900 text-lg">
                 {selectedChat.name}
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/30">
               {messages.map((msg: any) => (
                 <div key={msg.id} className="flex flex-col">
-                  <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 max-w-xs">
-                    <span className="font-medium text-gray-900 text-sm">
+                  <div className="bg-card p-3 rounded-lg shadow-sm border border-border max-w-xs">
+                    <span className="font-medium text-foreground text-sm">
                       {msg.sender.username}
                     </span>
-                    <p className="text-gray-700 mt-1">{msg.content}</p>
+                    <p className="text-muted-foreground mt-1">{msg.content}</p>
                   </div>
                 </div>
               ))}
@@ -277,7 +279,7 @@ function Home() {
               <input
                 type="text"
                 placeholder="Type a message..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground focus:border-transparent bg-background text-foreground"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e) => {
@@ -287,11 +289,11 @@ function Home() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-8 h-8 text-gray-400"
+                  className="w-8 h-8 text-muted-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
