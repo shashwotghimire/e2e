@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { Input } from "@/components/ui/input";
+import VideoChat from "@/components/VideoChat";
 
 interface Chat {
   name: string;
@@ -74,6 +75,9 @@ function Home() {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [chatName, setChatName] = useState<string>("");
   const [recieverUsername, setRecieverUsername] = useState<string>("");
+
+  // vid chat
+  const [vidChat, setVidChat] = useState(false);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -184,7 +188,7 @@ function Home() {
   return (
     <div className="flex h-screen bg-background text-foreground">
       {/* Sidebar: Chat List */}
-      <div className="w-1/3 bg-card border-r border-border flex flex-col">
+      <div className="w-[360px] bg-card border-r border-border flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-foreground mb-4">Chats</h2>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -220,12 +224,12 @@ function Home() {
             </DialogContent>
           </Dialog>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          <ul className="divide-y divide-gray-100">
+        <div className="flex-1 overflow-y-auto p-2">
+          <ul className="space-y-2">
             {chats.map((chat) => (
               <li
                 key={chat.id}
-                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="p-4 cursor-pointer hover:bg-accent/50 transition-colors rounded-md border border-transparent hover:border-border shadow-sm"
                 onClick={() => handleOpenChat(chat)}
               >
                 <p className="font-medium text-foreground">{chat.name}</p>
@@ -261,6 +265,15 @@ function Home() {
               <h3 className="font-semibold text-gray-900 text-lg">
                 {selectedChat.name}
               </h3>
+              <div className="flex">
+                <Button
+                  className="ml-auto"
+                  onClick={() => setVidChat(!vidChat)}
+                >
+                  Video Chat
+                </Button>
+              </div>
+              {vidChat && <VideoChat />}
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/30">
               {messages.map((msg: any) => (
@@ -275,17 +288,26 @@ function Home() {
               ))}
               <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 bg-white border-t border-gray-200">
-              <input
-                type="text"
-                placeholder="Type a message..."
-                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground focus:border-transparent bg-background text-foreground"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSendMessage();
-                }}
-              />
+            <div className="p-4 bg-card border-t border-border">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Type a message..."
+                  className="flex-1 px-4 py-3 border border-border rounded-full bbg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-foreground"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSendMessage();
+                  }}
+                />
+                <Button
+                  type="button"
+                  className="px-5 rounded-full"
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim()}
+                >
+                  Send
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
