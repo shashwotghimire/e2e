@@ -273,7 +273,7 @@ function Home() {
                   Video Chat
                 </Button>
               </div>
-              {vidChat && <VideoChat />}
+              {vidChat && <VideoChat chatId={selectedChatId} />}
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/30">
               {messages.map((msg: any) => (
