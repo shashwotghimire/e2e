@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { socket } from "@/socket";
 import { Button } from "./ui/button";
+
 interface VideoChatProps {
   chatId: any;
 }
+
 function VideoChat({ chatId }: VideoChatProps) {
-  const localVideoRef = useRef<HTMLVideoElement | null>(null); // localVideoRef gives direct access to <video> element
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null); // localStream stores MediaStream (recording devices) so we can track RTCPeerConnection
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
-  const [sharing, setSharing] = useState(false); // ui state button toggle
+  const [sharing, setSharing] = useState(false);
 
-  //   fucntion that asks for MediaStream access to stream to Video element
-
+  // Start local camera & mic
   const startLocal = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -24,13 +25,14 @@ function VideoChat({ chatId }: VideoChatProps) {
         localVideoRef.current.srcObject = stream;
       }
       const pc = pcRef.current ?? createPeerConnection();
-      stream?.getTracks().forEach((track) => pc.addTrack(track, stream));
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       setSharing(true);
     } catch (e: any) {
       alert(e);
     }
   };
 
+  // Stop camera & mic
   const stopLocal = () => {
     if (!localStream) return;
     localStream.getTracks().forEach((t) => t.stop());
@@ -64,17 +66,16 @@ function VideoChat({ chatId }: VideoChatProps) {
     return pc;
   };
 
-  // connect to signalling server and join room
+  // Connect to signaling server and join room
   useEffect(() => {
     socket.connect();
     socket.emit("join_chat", chatId);
 
     socket.on("offer", async (offer) => {
       const pc = pcRef.current ?? createPeerConnection();
-      await pc.setRemoteDescription(new RTCSessionDescription(offer)); //set remote description of the offer from peer
-      const answer = await pc.createAnswer(); //create local answer
-      await pc.setLocalDescription(answer); //pc.onicecandidate events will start firing after this
-
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
       socket.emit("answer", { chatId, answer });
     });
 
@@ -95,19 +96,28 @@ function VideoChat({ chatId }: VideoChatProps) {
     };
   }, [chatId]);
 
+  // Start a call
   const startCall = async () => {
     const pc = pcRef.current ?? createPeerConnection();
+    if (localStream) {
+      localStream
+        .getTracks()
+        .forEach((track) => pc.addTrack(track, localStream));
+    }
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     socket.emit("offer", { chatId, offer });
   };
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (localStream) {
         localStream.getTracks().forEach((t) => t.stop());
       }
     };
-  }, []);
+  }, [localStream]);
+
   return (
     <div>
       <video
@@ -123,8 +133,11 @@ function VideoChat({ chatId }: VideoChatProps) {
         style={{ transform: "scaleX(-1)" }}
       />
       <div>
-        <Button onClick={startLocal} className="cursor-pointer">
-          Start Camera
+        <Button
+          onClick={sharing ? stopLocal : startLocal}
+          className="cursor-pointer"
+        >
+          {sharing ? "Stop Camera" : "Start Camera"}
         </Button>
         <Button onClick={startCall} className="cursor-pointer">
           Start Call
