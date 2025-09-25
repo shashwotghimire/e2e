@@ -119,13 +119,13 @@ function VideoChat({ chatId }: VideoChatProps) {
         ref={localVideoRef}
         autoPlay
         playsInline
-        style={{ transform: "scaleX(-1)" }}
+        style={{ width: 320, height: 180, transform: "scaleX(-1)" }}
       />
       <video
         ref={remoteVideoRef}
         autoPlay
         playsInline
-        style={{ transform: "scaleX(-1)" }}
+        style={{ width: 320, height: 180, transform: "scaleX(-1)" }}
       />
       <div>
         <Button
