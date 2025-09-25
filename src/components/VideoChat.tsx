@@ -99,11 +99,6 @@ function VideoChat({ chatId }: VideoChatProps) {
   // Start a call
   const startCall = async () => {
     const pc = pcRef.current ?? createPeerConnection();
-    if (localStream) {
-      localStream
-        .getTracks()
-        .forEach((track) => pc.addTrack(track, localStream));
-    }
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     socket.emit("offer", { chatId, offer });
