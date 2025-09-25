@@ -110,8 +110,18 @@ function VideoChat({ chatId }: VideoChatProps) {
   }, []);
   return (
     <div>
-      <video ref={localVideoRef} autoPlay playsInline />
-      <video ref={remoteVideoRef} autoPlay playsInline />
+      <video
+        ref={localVideoRef}
+        autoPlay
+        playsInline
+        style={{ transform: "scaleX(-1)" }}
+      />
+      <video
+        ref={remoteVideoRef}
+        autoPlay
+        playsInline
+        style={{ transform: "scaleX(-1)" }}
+      />
       <div>
         <Button onClick={startLocal} className="cursor-pointer">
           Start Camera
